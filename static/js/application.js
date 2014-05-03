@@ -1,5 +1,5 @@
-var inbox = new ReconnectingWebSocket("ws://"+ location.host + "/receive");
 var outbox = new ReconnectingWebSocket("ws://"+ location.host + "/submit");
+var inbox = new ReconnectingWebSocket("ws://"+ location.host + "/receive");
 
 var textShadow = "";
 var dmp = new diff_match_patch();
@@ -8,33 +8,35 @@ var id = Math.floor(Math.random()*11);
 inbox.onmessage = function(message) {
   var data = JSON.parse(message.data);
   // ignore own patch, else patch text and shadow
-  if (data.id != id) {
-    //console.log(data)
-    var text  = $("#input-text")[0].value;
-    if ( data.patch_text ) {
-      var patches = dmp.patch_fromText(data.patch_text);
-      var results = dmp.patch_apply(patches, text);
-      shadowResults = dmp.patch_apply(patches, textShadow);
-      textShadow = shadowResults[0];
-      $("#input-text")[0].value = results[0];
-    } else if (data.sync_needed) {
-      outbox.send(JSON.stringify({ id: id, full_text: text}));
-    } else if (data.full_text) {
-      //console.log('updating full text', data.full_text)
-      $("#input-text")[0].value = data.full_text;
-      textShadow = data.full_text;
-    }
-    // need to resync
-    if (data.checksum && data.checksum != md5($("#input-text")[0].value) ) {
-      //console.log('asking for sync', data.checksum, $("#input-text")[0].value)
-      outbox.send(JSON.stringify({ id: id, sync_needed: true}));
-    }
+  if (data.id == id) {
+    return;
+  }
+  //console.log(data)
+  var text  = $("#input-text")[0].value;
+  if ( data.patch_text ) {
+    var patches = dmp.patch_fromText(data.patch_text);
+    var results = dmp.patch_apply(patches, text);
+    shadowResults = dmp.patch_apply(patches, textShadow);
+    textShadow = shadowResults[0];
+    $("#input-text")[0].value = results[0];
+  } else if (data.sync_needed) {
+    outbox.send(JSON.stringify({ id: id, full_text: text}));
+  } else if (data.full_text) {
+    console.log('updating full text')
+    $("#input-text")[0].value = data.full_text;
+    textShadow = data.full_text;
   }
 };
 
 inbox.onclose = function(){
-    console.log('inbox closed');
-    this.inbox = new WebSocket(inbox.url);
+  console.log('inbox closed');
+  this.inbox = new WebSocket(inbox.url);
+};
+
+inbox.onopen = function(){
+  // need to resync
+  console.log('asking for sync')
+  outbox.send(JSON.stringify({ id: id, sync_needed: true}));
 };
 
 outbox.onclose = function(){
@@ -52,13 +54,12 @@ setInterval(
   }
   var patch_list = dmp.patch_make(textShadow, text, diff);
   var patch_text = dmp.patch_toText(patch_list);
-  var checksum = md5(text)
 
   // send patch if exists
   if (patch_text) {
     // update shadow
     textShadow = text;
-    outbox.send(JSON.stringify({ id: id, patch_text: patch_text, checksum: checksum }));
+    outbox.send(JSON.stringify({ id: id, patch_text: patch_text }));
   }
 }, 500);
 

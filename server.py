@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 """
-Chat Server
+Server
 ===========
 
-This simple application uses WebSockets to run a primitive chat server.
+This simple application uses WebSockets to run a shared text editor.
+Remote code execution via docker coming soon.
 """
 
 import os
@@ -15,7 +16,7 @@ from flask import Flask, render_template
 from flask_sockets import Sockets
 
 REDIS_URL = 'redis://localhost:6379' #os.environ['REDISCLOUD_URL']
-REDIS_CHAN = 'chat'
+REDIS_CHAN = 'editor'
 
 app = Flask(__name__)
 app.debug = 'DEBUG' in os.environ
@@ -25,7 +26,7 @@ redis = redis.from_url(REDIS_URL)
 
 
 
-class ChatBackend(object):
+class Backend(object):
     """Interface for registering and updating WebSocket clients."""
 
     def __init__(self):
@@ -62,8 +63,8 @@ class ChatBackend(object):
         """Maintains Redis subscription in the background."""
         gevent.spawn(self.run)
 
-chats = ChatBackend()
-chats.start()
+editors = Backend()
+editors.start()
 
 
 @app.route('/')
@@ -72,7 +73,7 @@ def hello():
 
 @sockets.route('/submit')
 def inbox(ws):
-    """Receives incoming chat messages, inserts them into Redis."""
+    """Receives incoming messages, inserts them into Redis."""
     while ws.socket is not None:
         # Sleep to prevent *contstant* context-switches.
         gevent.sleep(0.1)
@@ -84,11 +85,11 @@ def inbox(ws):
 
 @sockets.route('/receive')
 def outbox(ws):
-    """Sends outgoing chat messages, via `ChatBackend`."""
-    chats.register(ws)
+    """Sends outgoing messages, via `Backend`."""
+    editors.register(ws)
 
     while ws.socket is not None:
-        # Context switch while `ChatBackend.start` is running in the background.
+        # Context switch while `Backend.start` is running in the background.
         gevent.sleep()
 
 

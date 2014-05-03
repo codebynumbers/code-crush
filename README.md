@@ -1,8 +1,8 @@
-# Python Websockets Example: Chat
+# Python Websockets Example: Shared editor
 
-This is a simple application that serves tasty WebSockets to your users
-with Flask, Flask-Sockets, Gevent, and Gunicorn.
+This is a simple application based on https://github.com/heroku-examples/python-websockets-chat
+that uses Flask, Flask-Sockets, Gevent, and Gunicorn, and Google's diff_match_patch.js to 
+share a text editor among clients.
 
-Mmmm.
+Remote code execution using docker coming soon. 
 
-Check out the [live demo](http://flask-chat.herokuapp.com) or [read the docs](https://devcenter.heroku.com/articles/python-websockets).

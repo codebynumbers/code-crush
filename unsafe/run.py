@@ -1,3 +1,2 @@
-for i in range(3):
-    print i
-   
+for i in range(15):
+    print 3

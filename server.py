@@ -28,6 +28,11 @@ redis = redis.from_url(REDIS_URL)
 
 cwd = os.path.dirname(os.path.realpath(__file__))
 
+# Re build client and image each time so we don't get all the old logs
+docker = Docker.Client(base_url='unix://var/run/docker.sock',
+            version='1.9',
+            timeout=5)
+
 class Backend(object):
     """Interface for registering and updating WebSocket clients."""
 
@@ -86,10 +91,6 @@ def inbox(ws):
         
         message_dict = json.loads(message)
         if message_dict.get('type') == 'run':
-            # Re build client and image each time so we don't get all the old logs
-            docker = Docker.Client(base_url='unix://var/run/docker.sock',
-                        version='1.9',
-                        timeout=5)
 
             with open('%s/unsafe/run.py' % cwd, 'w') as outfile:
                 outfile.write(message_dict['full_text'])
@@ -98,14 +99,20 @@ def inbox(ws):
             docker.start(container_id, 
                 binds={'%s/unsafe' % cwd: '/mnt/code' })
 
+            # Give container a chance to run code
+            gevent.sleep(0.1)            
+
             message_dict['results'] = docker.logs(container_id)
-            print message_dict['full_text']
             del message_dict['full_text']
             message = json.dumps(message_dict)
-            print message, container_id
+
+            # Cleanup
+            docker.stop(container_id)
+            docker.remove_container(container_id)
 
         app.logger.info(u'Inserting message: {}'.format(message))
         redis.publish(REDIS_CHAN, message)
+
 
 @sockets.route('/receive')
 def outbox(ws):

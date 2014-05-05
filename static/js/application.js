@@ -8,23 +8,25 @@ var id = Math.floor(Math.random()*11);
 inbox.onmessage = function(message) {
   var data = JSON.parse(message.data);
   // ignore own patch, else patch text and shadow
-  if (data.id == id) {
-    return;
-  }
+  var from_self = (data.id == id)
   //console.log(data)
   var text  = $("#input-text")[0].value;
-  if ( data.patch_text ) {
+
+  if ( data.patch_text && !from_self) {
     var patches = dmp.patch_fromText(data.patch_text);
     var results = dmp.patch_apply(patches, text);
     shadowResults = dmp.patch_apply(patches, textShadow);
     textShadow = shadowResults[0];
     $("#input-text")[0].value = results[0];
-  } else if (data.sync_needed) {
+  } else if (data.sync_needed && !from_self) {
     outbox.send(JSON.stringify({ id: id, full_text: text}));
-  } else if (data.full_text) {
+  } else if (data.full_text && !from_self) {
     console.log('updating full text')
     $("#input-text")[0].value = data.full_text;
     textShadow = data.full_text;
+  } else if (data.results) {
+    console.log('updating results')
+    $("#results").html(data.results.replace(/\n/g, '<br>'));
   }
 };
 

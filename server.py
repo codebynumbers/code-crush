@@ -26,12 +26,7 @@ app.debug = 'DEBUG' in os.environ
 sockets = Sockets(app)
 redis = redis.from_url(REDIS_URL)
 
-
-docker = Docker.Client(base_url='unix://var/run/docker.sock',
-            version='1.10',
-            timeout=10)
-container_id = docker.create_container('exekias/python', command='/usr/bin/python /mnt/code/run.py', volumes=['/mnt/code'])
-
+cwd = os.path.dirname(os.path.realpath(__file__))
 
 class Backend(object):
     """Interface for registering and updating WebSocket clients."""
@@ -40,6 +35,7 @@ class Backend(object):
         self.clients = list()
         self.pubsub = redis.pubsub()
         self.pubsub.subscribe(REDIS_CHAN)
+
 
     def __iter_data(self):
         for message in self.pubsub.listen():
@@ -87,21 +83,29 @@ def inbox(ws):
         message = ws.receive()
         if not message:
             continue
-
+        
         message_dict = json.loads(message)
         if message_dict.get('type') == 'run':
-            with open('unsafe/run.py', 'w') as outfile:
+            # Re build client and image each time so we don't get all the old logs
+            docker = Docker.Client(base_url='unix://var/run/docker.sock',
+                        version='1.9',
+                        timeout=5)
+
+            with open('%s/unsafe/run.py' % cwd, 'w') as outfile:
                 outfile.write(message_dict['full_text'])
 
+            container_id = docker.create_container('exekias/python', command='/usr/bin/python /mnt/code/run.py', volumes=['/mnt/code'])
             docker.start(container_id, 
-                binds={'/home/rob/Projects/code-crush/unsafe': '/mnt/code' })
+                binds={'%s/unsafe' % cwd: '/mnt/code' })
 
-            message_dict['results'] = docker.logs(container_id)            
+            message_dict['results'] = docker.logs(container_id)
+            print message_dict['full_text']
+            del message_dict['full_text']
             message = json.dumps(message_dict)
             print message, container_id
 
-            app.logger.info(u'Inserting message: {}'.format(message))
-            redis.publish(REDIS_CHAN, message)
+        app.logger.info(u'Inserting message: {}'.format(message))
+        redis.publish(REDIS_CHAN, message)
 
 @sockets.route('/receive')
 def outbox(ws):
@@ -111,6 +115,4 @@ def outbox(ws):
     while ws.socket is not None:
         # Context switch while `Backend.start` is running in the background.
         gevent.sleep()
-
-
 

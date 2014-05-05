@@ -69,5 +69,6 @@ setInterval(
 $('#run').click(function(){
   console.log('run called');
   var text  = $("#input-text")[0].value;
+  $("#results").html('evaluating ...');
   outbox.send(JSON.stringify({ id: id, full_text: text, type: 'run'}));
 });

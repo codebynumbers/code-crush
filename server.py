@@ -12,6 +12,8 @@ import os
 import logging
 import redis
 import gevent
+import docker as Docker
+import simplejson as json
 from flask import Flask, render_template
 from flask_sockets import Sockets
 
@@ -24,6 +26,11 @@ app.debug = 'DEBUG' in os.environ
 sockets = Sockets(app)
 redis = redis.from_url(REDIS_URL)
 
+
+docker = Docker.Client(base_url='unix://var/run/docker.sock',
+            version='1.10',
+            timeout=10)
+container_id = docker.create_container('exekias/python', command='/usr/bin/python /mnt/code/run.py', volumes=['/mnt/code'])
 
 
 class Backend(object):
@@ -78,8 +85,21 @@ def inbox(ws):
         # Sleep to prevent *contstant* context-switches.
         gevent.sleep(0.1)
         message = ws.receive()
+        if not message:
+            continue
 
-        if message:
+        message_dict = json.loads(message)
+        if message_dict.get('type') == 'run':
+            with open('unsafe/run.py', 'w') as outfile:
+                outfile.write(message_dict['full_text'])
+
+            docker.start(container_id, 
+                binds={'/home/rob/Projects/code-crush/unsafe': '/mnt/code' })
+
+            message_dict['results'] = docker.logs(container_id)            
+            message = json.dumps(message_dict)
+            print message, container_id
+
             app.logger.info(u'Inserting message: {}'.format(message))
             redis.publish(REDIS_CHAN, message)
 

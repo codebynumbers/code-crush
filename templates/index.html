@@ -10,10 +10,12 @@
     <div class="container">
       <form id="input-form" class="form-inline">
         <div class="form-group">
-          <textarea style="height:300px" id="input-text" type="text"
+          <textarea style="width:400px;height:300px" id="input-text" type="text"
            class="form-control" placeholder="Enter chat text here!" autofocus /></textarea>
         </div>
       </form>
+      <div id="results" style="width:400px;height:300px"></div>
+      <button class="btn btn-primary" id="run" value="Run!" />
     </div>
     <script type="text/javascript" src="static/js/jquery-2.0.3.min.js"></script>
     <script type="text/javascript" src="static/js/reconnecting-websocket.min.js"></script>

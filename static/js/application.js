@@ -63,3 +63,9 @@ setInterval(
   }
 }, 500);
 
+
+$('#run').click(function(){
+  console.log('run called');
+  var text  = $("#input-text")[0].value;
+  outbox.send(JSON.stringify({ id: id, full_text: text, type: 'run'}));
+});

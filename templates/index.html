@@ -10,8 +10,7 @@
     <div class="container">
       <div class="pull-left">
           <h2>Code</h2>
-          <textarea style="width:400px;height:300px" id="input-text" type="text"
-            placeholder="Enter chat text here!" autofocus /></textarea>
+          <pre style="width:400px;height:300px" id="input-text"></pre>
           <input type="button" class="pull-left btn btn-primary" id="run" value="Run!" />
       </div>
       <div class="pull-left">
@@ -22,6 +21,12 @@
     <script type="text/javascript" src="static/js/jquery-2.0.3.min.js"></script>
     <script type="text/javascript" src="static/js/reconnecting-websocket.min.js"></script>
     <script type="text/javascript" src="static/js/diff_match_patch.js"></script>
+    <script type="text/javascript" src="static/js/ace.js" charset="utf-8"></script>
+    <script>
+        var editor = ace.edit("input-text");
+        editor.setTheme("ace/theme/monokai");
+        editor.getSession().setMode("ace/mode/python");
+    </script>
     <script type="text/javascript" src="static/js/application.js"></script>
   </body>
 </html>

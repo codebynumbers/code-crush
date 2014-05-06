@@ -9,20 +9,19 @@ inbox.onmessage = function(message) {
   var data = JSON.parse(message.data);
   // ignore own patch, else patch text and shadow
   var from_self = (data.id == id)
-  //console.log(data)
-  var text  = $("#input-text")[0].value;
+  var text  = editor.getValue();
 
   if ( data.patch_text && !from_self) {
     var patches = dmp.patch_fromText(data.patch_text);
     var results = dmp.patch_apply(patches, text);
     shadowResults = dmp.patch_apply(patches, textShadow);
     textShadow = shadowResults[0];
-    $("#input-text")[0].value = results[0];
+    editor.setValue(results[0]);
   } else if (data.sync_needed && !from_self) {
     outbox.send(JSON.stringify({ id: id, full_text: text}));
   } else if (data.full_text && !from_self) {
     console.log('updating full text')
-    $("#input-text")[0].value = data.full_text;
+    editor.setValue(data.full_text);
     textShadow = data.full_text;
   } else if (data.results) {
     console.log('updating results')
@@ -49,7 +48,7 @@ outbox.onclose = function(){
 setInterval(
  function(event) {
   //event.preventDefault();
-  var text  = $("#input-text")[0].value;
+  var text = editor.getValue();
   var diff = dmp.diff_main(textShadow, text, true);
   if (diff.length > 2) {
     dmp.diff_cleanupSemantic(diff);
@@ -68,7 +67,7 @@ setInterval(
 
 $('#run').click(function(){
   console.log('run called');
-  var text  = $("#input-text")[0].value;
+  var text  = editor.getValue();
   $("#results").html('evaluating ...');
   outbox.send(JSON.stringify({ id: id, full_text: text, type: 'run'}));
 });

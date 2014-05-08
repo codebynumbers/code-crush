@@ -85,9 +85,10 @@ editors = Backend()
 editors.start()
 
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+@app.route('/', defaults={'room':'default'})
+@app.route('/<room>')
+def index(room):
+    return render_template('index.html', room=room)
 
 @sockets.route('/submit/<room>')
 def inbox(ws, room):

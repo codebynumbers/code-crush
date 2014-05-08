@@ -25,28 +25,28 @@ inbox.onmessage = function(message) {
   } else if (data.sync_needed && !from_self) {
     outbox.send(JSON.stringify({ id: id, full_text: text}));
   } else if (data.full_text && !from_self) {
-    console.log('updating full text')
+    //console.log('updating full text');
     editor.setValue(data.full_text);
     textShadow = data.full_text;
   } else if (data.results) {
-    console.log('updating results')
+    //console.log('updating results');
     $("#results").html(data.results.replace(/\n/g, '<br>'));
   }
 };
 
 inbox.onclose = function(){
-  console.log('inbox closed');
+  //console.log('inbox closed');
   this.inbox = new WebSocket(inbox.url);
 };
 
 inbox.onopen = function(){
   // need to resync
-  console.log('asking for sync')
+  //console.log('asking for sync');
   outbox.send(JSON.stringify({ id: id, sync_needed: true}));
 };
 
 outbox.onclose = function(){
-    console.log('outbox closed');
+    //console.log('outbox closed');
     this.outbox = new WebSocket(outbox.url);
 };
 
@@ -71,7 +71,8 @@ setInterval(
 
 
 $('#run').click(function(){
-  console.log('run called');
+  //console.log('run called');
+
   var text  = editor.getValue();
   $("#results").html('evaluating ...');
   outbox.send(JSON.stringify({ id: id, full_text: text, type: 'run'}));

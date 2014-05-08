@@ -37,7 +37,11 @@ class Backend(object):
     """Interface for registering and updating WebSocket clients."""
 
     def __init__(self):
-        self.clients = list()
+        # map of room => clients[]
+        self.room_clients = {}
+        # map of clients => room
+        self.client_room = {}        
+
         self.pubsub = redis.pubsub()
         self.pubsub.subscribe(REDIS_CHAN)
 
@@ -49,9 +53,12 @@ class Backend(object):
                 app.logger.info(u'Sending message: {}'.format(data))
                 yield data
 
-    def register(self, client):
+    def register(self, client, room):
         """Register a WebSocket connection for Redis updates."""
-        self.clients.append(client)
+        if not self.room_clients.get(room):
+            self.room_clients[room] = []
+        self.room_clients[room].append(client)
+        self.client_room[client] = room
 
     def send(self, client, data):
         """Send given data to the registered client.
@@ -59,12 +66,15 @@ class Backend(object):
         try:
             client.send(data)
         except Exception:
-            self.clients.remove(client)
+            # find client's room and remove them from appropriate list
+            room = self.client_room[client]
+            self.room_clients[room].remove(client)
 
     def run(self):
         """Listens for new messages in Redis, and sends them to clients."""
         for data in self.__iter_data():
-            for client in self.clients:
+            room = json.loads(data)['room']
+            for client in self.room_clients.get(room, []):
                 gevent.spawn(self.send, client, data)
 
     def start(self):
@@ -79,8 +89,8 @@ editors.start()
 def index():
     return render_template('index.html')
 
-@sockets.route('/submit')
-def inbox(ws):
+@sockets.route('/submit/<room>')
+def inbox(ws, room):
     """Receives incoming messages, inserts them into Redis."""
     while ws.socket is not None:
         # Sleep to prevent *contstant* context-switches.
@@ -90,6 +100,8 @@ def inbox(ws):
             continue
         
         message_dict = json.loads(message)
+        message_dict['room'] = room
+
         if message_dict.get('type') == 'run':
 
             with open('%s/unsafe/run.py' % cwd, 'w') as outfile:
@@ -104,20 +116,20 @@ def inbox(ws):
 
             message_dict['results'] = docker.logs(container_id)
             del message_dict['full_text']
-            message = json.dumps(message_dict)
 
             # Cleanup
             docker.stop(container_id)
             docker.remove_container(container_id)
 
+        message = json.dumps(message_dict)
         app.logger.info(u'Inserting message: {}'.format(message))
         redis.publish(REDIS_CHAN, message)
 
 
-@sockets.route('/receive')
-def outbox(ws):
+@sockets.route('/receive/<room>')
+def outbox(ws, room):
     """Sends outgoing messages, via `Backend`."""
-    editors.register(ws)
+    editors.register(ws, room)
 
     while ws.socket is not None:
         # Context switch while `Backend.start` is running in the background.

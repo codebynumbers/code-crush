@@ -1,5 +1,5 @@
-var outbox = new ReconnectingWebSocket("ws://"+ location.host + "/submit");
-var inbox = new ReconnectingWebSocket("ws://"+ location.host + "/receive");
+var outbox = new ReconnectingWebSocket("ws://"+ location.host + "/submit/default");
+var inbox = new ReconnectingWebSocket("ws://"+ location.host + "/receive/default");
 
 var textShadow = "";
 var dmp = new diff_match_patch();

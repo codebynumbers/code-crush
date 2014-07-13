@@ -9,6 +9,7 @@ var inbox = new ReconnectingWebSocket("ws://"+ location.host + "/receive/"+room)
 var textShadow = "";
 var dmp = new diff_match_patch();
 var id = Math.floor(Math.random()*11);
+var language = 'Python';
 
 inbox.onmessage = function(message) {
   var data = JSON.parse(message.data);
@@ -70,10 +71,17 @@ setInterval(
 }, 500);
 
 
-$('#run').click(function(){
-  //console.log('run called');
+$(function(){
 
-  var text  = editor.getValue();
-  $("#results").html('evaluating ...');
-  outbox.send(JSON.stringify({ id: id, full_text: text, type: 'run'}));
+  $('#language-select a').click(function() {
+    language = $(this).html();
+    $('#selected-language').html(language);
+  });
+
+  $('#run').click(function(){
+    var text  = editor.getValue();
+    $("#results").html('evaluating ...');
+    outbox.send(JSON.stringify({ id: id, full_text: text, type: 'run', language: language}));
+  });
+
 });

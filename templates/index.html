@@ -7,24 +7,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
   <body>
+    <nav class="navbar navbar-default" role="navigation">
+      <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Code Crush</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav">
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Language <span class="caret"></span></a>
+              <ul id="language-select" class="dropdown-menu" role="menu">
+                <li><a href="#">Python</a></li>
+                <li><a href="#">PHP</a></li>
+                <li><a href="#">JavaScript</a></li>
+                <li><a href="#">Java</a></li>
+                <li><a href="#">Ruby</a></li>
+                <li><a href="#">Perl</a></li>
+              </ul>
+            </li>            
+          </ul>          
+        </div><!-- /.navbar-collapse -->
+      </div><!-- /.container-fluid -->
+    </nav>    
     <div class="container">
-      <div class="pull-left">
-          <h2>Code</h2>
-          <pre style="width:400px;height:300px" id="input-text"></pre>
-          <input type="button" class="pull-left btn btn-primary" id="run" value="Run!" />
+      <div class="pull-left" style="margin-right:10px">
+          <input type="button" class="pull-right btn btn-primary" id="run" value="Run!" />
+          <h4><span id="selected-language"></span> Code</h4>
+          <pre style="width:300px;height:300px" id="input-text"></pre>
+         
       </div>
       <div class="pull-left">
-          <h2>Results</h2>
-          <div id="results" style="width:400px;height:300px;border:solid silver 1px;overflow:scroll;"></div>
+          <h4>Results</h4>
+          <div id="results" style="width:200px;height:300px;border:solid silver 1px;overflow:scroll;"></div>
       </div>
     </div>
     <script type="text/javascript">
         var room = '{{room}}';
     </script>
     <script type="text/javascript" src="static/js/jquery-2.0.3.min.js"></script>
+    <script type="text/javascript" src="static/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="static/js/reconnecting-websocket.min.js"></script>
     <script type="text/javascript" src="static/js/diff_match_patch.js"></script>
     <script type="text/javascript" src="static/js/ace.js" charset="utf-8"></script>
-    <script type="text/javascript" src="static/js/application.js"></script>
+    <script type="text/javascript" src="static/js/application.js"></script
+
+    >
   </body>
 </html>

@@ -37,19 +37,24 @@ docker = Docker.Client(base_url='unix://var/run/docker.sock',
 images = {
     'Python': {
         'name': 'exekias/python',
-        'run': '/usr/bin/python',
+        'run': '/usr/bin/python /mnt/code/{runfile}',
         'ext': 'py'
     },
     'PHP': {
         'name': 'darh/php-essentials',
-        'run': '/usr/bin/php',
+        'run': '/usr/bin/php /mnt/code/{runfile}',
         'ext': 'php'
     },
     'Perl': {
         'name': 'exekias/python',
-        'run': '/usr/bin/perl',
+        'run': '/usr/bin/perl /mnt/code/{runfile}',
         'ext': 'pl'
-    }    
+    },
+    'Java': {
+        'name': 'dockerfile/java',
+        'run': '/usr/bin/javac /mnt/code/{runfile} && /usr/bin/java Main',
+        'ext': 'java'
+    }
 }
 
 class Backend(object):
@@ -59,7 +64,7 @@ class Backend(object):
         # map of room => clients[]
         self.room_clients = {}
         # map of clients => room
-        self.client_room = {}        
+        self.client_room = {}
 
         self.pubsub = redis.pubsub()
         self.pubsub.subscribe(REDIS_CHAN)
@@ -118,7 +123,7 @@ def inbox(ws, room):
         message = ws.receive()
         if not message:
             continue
-        
+
         message_dict = json.loads(message)
         message_dict['room'] = room
 
@@ -154,11 +159,11 @@ def run_code(message_dict):
         outfile.write(message_dict['full_text'])
 
     container_id = docker.create_container(
-        images[lang]['name'], 
-        command="%s /mnt/code/%s" % (images[lang]['run'], runfile), 
+        images[lang]['name'],
+        command=images[lang]['run'].format(runfile=runfile),
         volumes=['/mnt/code'])
 
-    res = docker.start(container_id, 
+    res = docker.start(container_id,
         binds={'%s/unsafe' % cwd: '/mnt/code' })
 
     output = "\n".join([line for line in docker.logs(container_id, stream=True)])
@@ -166,9 +171,12 @@ def run_code(message_dict):
     del message_dict['full_text']
 
     # Cleanup
-    os.unlink(runpath)
-    docker.stop(container_id)
-    docker.remove_container(container_id)
+    try:
+        os.unlink(runpath)
+        docker.stop(container_id)
+        docker.remove_container(container_id)
+    except Exception as e:
+        print e
 
 
 if __name__ == "__main__":

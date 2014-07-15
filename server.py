@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-Server
+Code Crush
 ===========
-
 This simple application uses WebSockets to run a shared text editor.
-Remote code execution via docker coming soon.
+Allows "safe" remote code execution via docker.
 """
 
 import os
@@ -39,13 +38,18 @@ images = {
     'Python': {
         'name': 'exekias/python',
         'run': '/usr/bin/python',
-        'ext': 'php'
+        'ext': 'py'
     },
     'PHP': {
         'name': 'darh/php-essentials',
         'run': '/usr/bin/php',
         'ext': 'php'
-    }
+    },
+    'Perl': {
+        'name': 'exekias/python',
+        'run': '/usr/bin/perl',
+        'ext': 'pl'
+    }    
 }
 
 class Backend(object):
@@ -109,7 +113,7 @@ def index(room):
 def inbox(ws, room):
     """Receives incoming messages, inserts them into Redis."""
     while ws.socket is not None:
-        # Sleep to prevent *contstant* context-switches.
+        # Sleep to prevent *constant* context-switches.
         gevent.sleep(0.1)
         message = ws.receive()
         if not message:
@@ -136,7 +140,6 @@ def outbox(ws, room):
         gevent.sleep()
 
 
-
 def run_code(message_dict):
     lang = message_dict['language']
     if lang not in images:
@@ -152,23 +155,13 @@ def run_code(message_dict):
 
     container_id = docker.create_container(
         images[lang]['name'], 
-        command="%s /mnt/code/%s > /mnt/code/output.txt" % (images[lang]['run'], runfile), 
+        command="%s /mnt/code/%s" % (images[lang]['run'], runfile), 
         volumes=['/mnt/code'])
 
-    docker.start(container_id, 
+    res = docker.start(container_id, 
         binds={'%s/unsafe' % cwd: '/mnt/code' })
 
-    # Give container a chance to run code
-    output = None
-    for i in range(10):
-        output = docker.logs(container_id)         
-        if output:
-            app.logger.debug("logs for %s %s" % (images[lang]['run'], runfile))
-            app.logger.debug(output)
-            break
-        else:
-            gevent.sleep(0.5)
-
+    output = "\n".join([line for line in docker.logs(container_id, stream=True)])
     message_dict['results'] = output
     del message_dict['full_text']
 
@@ -177,4 +170,6 @@ def run_code(message_dict):
     docker.stop(container_id)
     docker.remove_container(container_id)
 
-    return None
+
+if __name__ == "__main__":
+    app.run()

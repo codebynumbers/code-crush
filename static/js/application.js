@@ -29,7 +29,7 @@ inbox.onmessage = function(message) {
     //console.log('updating full text');
     editor.setValue(data.full_text);
     textShadow = data.full_text;
-  } else if (data.results) {
+  } else if (data.results !== "undefined") {
     //console.log('updating results');
     $("#results").html(data.results.replace(/\n/g, '<br>'));
   }

@@ -13,6 +13,7 @@ import redis
 import gevent
 import docker as Docker
 import simplejson as json
+import shutil
 from flask import Flask, render_template
 from flask_sockets import Sockets
 from random import randint
@@ -37,33 +38,28 @@ docker = Docker.Client(base_url='unix://var/run/docker.sock',
 images = {
     'Python': {
         'name': 'dockerfile/python',
-        'run': '/usr/bin/python /mnt/code/{runfile}',
-        'ext': 'py'
+        'run': '/usr/bin/python /mnt/code/run',
     },
     'PHP': {
         'name': 'darh/php-essentials',
-        'run': '/usr/bin/php /mnt/code/{runfile}',
-        'ext': 'php'
+        'run': '/usr/bin/php /mnt/code/run',
     },
     'Perl': {
         'name': 'dockerfile/python',
-        'run': '/usr/bin/perl /mnt/code/{runfile}',
-        'ext': 'pl'
+        'run': '/usr/bin/perl /mnt/code/run',
     },
     'Java': {
         'name': 'dockerfile/java',
-        'run': '/bin/bash -c "cd /mnt/code && /usr/bin/javac /mnt/code/{runfile} && /usr/bin/java Main"',
-        'ext': 'java'
+        'run': '/bin/bash -c "cd /mnt/code && /usr/bin/javac run.java && /usr/bin/java Main"',
+        'ext': '.java'
     },
     'Ruby': {
         'name': 'dockerfile/ruby',
-        'run': '/usr/bin/ruby /mnt/code/{runfile}',
-        'ext': 'rb'
+        'run': '/usr/bin/ruby /mnt/code/run',
     },
     'JavaScript': {
         'name': 'dockerfile/nodejs',
-        'run': '/usr/local/bin/node /mnt/code/{runfile}',
-        'ext': 'js'
+        'run': '/usr/local/bin/node /mnt/code/run',
     }
 }
 
@@ -161,30 +157,38 @@ def run_code(message_dict):
         app.logger.debug(u'Unsupported language')
         return
 
-    # psuedo-unique-tempfile
-    runfile = 'run_%d.%s' % (randint(1, 999999999), images[lang]['ext'])
-    runpath = "%s/unsafe/%s" % (cwd, runfile)
+    # psuedo-unique-tempdir
+    # TODO switch this to tempfile.mkdtemp
+    rand = randint(1, 999999999)
+    runpath = "%s/unsafe/%d" % (cwd, rand)
+    runfile = "%s/run%s" % (runpath, images[lang].get('ext', '') )
+    os.mkdir(runpath)
 
-    with open(runpath, 'w') as outfile:
+    with open(runfile, 'w') as outfile:
         outfile.write(message_dict['full_text'])
 
     container_id = docker.create_container(
         images[lang]['name'],
-        command=images[lang]['run'].format(runfile=runfile),
+        command=images[lang]['run'],
         volumes=['/mnt/code'])
 
     res = docker.start(container_id,
-        binds={'%s/unsafe' % cwd: '/mnt/code' })
+        binds={runpath: '/mnt/code' })
 
     output = "\n".join([line for line in docker.logs(container_id, stream=True)])
     message_dict['results'] = output
     del message_dict['full_text']
 
-    # Cleanup
+    # Docker Cleanup
     try:
-        os.unlink(runpath)
         docker.stop(container_id)
         docker.remove_container(container_id)
+    except Exception as e:
+        print e
+
+    # Tempfile cleanup
+    try:
+        shutil.rmtree(runpath)
     except Exception as e:
         print e
 

@@ -52,8 +52,18 @@ images = {
     },
     'Java': {
         'name': 'dockerfile/java',
-        'run': '/usr/bin/javac /mnt/code/{runfile} && /usr/bin/java Main',
+        'run': '/bin/bash -c "cd /mnt/code && /usr/bin/javac /mnt/code/{runfile} && /usr/bin/java Main"',
         'ext': 'java'
+    },
+    'Ruby': {
+        'name': 'dockerfile/ruby',
+        'run': '/usr/bin/ruby /mnt/code/{runfile}',
+        'ext': 'rb'
+    },
+    'JavaScript': {
+        'name': 'dockerfile/nodejs',
+        'run': '/usr/local/bin/node /mnt/code/{runfile}',
+        'ext': 'js'
     }
 }
 

@@ -36,7 +36,7 @@ docker = Docker.Client(base_url='unix://var/run/docker.sock',
 
 images = {
     'Python': {
-        'name': 'exekias/python',
+        'name': 'dockerfile/python',
         'run': '/usr/bin/python /mnt/code/{runfile}',
         'ext': 'py'
     },
@@ -46,7 +46,7 @@ images = {
         'ext': 'php'
     },
     'Perl': {
-        'name': 'exekias/python',
+        'name': 'dockerfile/python',
         'run': '/usr/bin/perl /mnt/code/{runfile}',
         'ext': 'pl'
     },

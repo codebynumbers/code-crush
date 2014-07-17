@@ -11,6 +11,11 @@ var dmp = new diff_match_patch();
 var id = Math.floor(Math.random()*11);
 var language = 'Python';
 
+function setLanguage(lang) {
+  language = lang;
+  $('#selected-language').html(language);
+}
+
 inbox.onmessage = function(message) {
   var data = JSON.parse(message.data);
   // ignore own patch, else patch text and shadow
@@ -24,14 +29,16 @@ inbox.onmessage = function(message) {
     textShadow = shadowResults[0];
     editor.setValue(results[0]);
   } else if (data.sync_needed && !from_self) {
-    outbox.send(JSON.stringify({ id: id, full_text: text}));
+    outbox.send(JSON.stringify({ id: id, full_text: text, language: language}));
   } else if (data.full_text && !from_self) {
     //console.log('updating full text');
     editor.setValue(data.full_text);
     textShadow = data.full_text;
-  } else if (data.results !== "undefined") {
-    //console.log('updating results');
+    setLanguage(data.language);
+  } else if (data.results !== undefined) {
     $("#results").html(data.results.replace(/\n/g, '<br>'));
+  } else if (data.type == "lang") {
+    setLanguage(data.language);
   }
 };
 
@@ -74,8 +81,8 @@ setInterval(
 $(function(){
 
   $('#language-select a').click(function() {
-    language = $(this).html();
-    $('#selected-language').html(language);
+    setLanguage($(this).html());
+    outbox.send(JSON.stringify({ id: id, type: 'lang', language: language}));
   });
 
   $('#run').click(function(){

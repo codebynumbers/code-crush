@@ -18,11 +18,11 @@ from flask import Flask, render_template
 from flask_sockets import Sockets
 from random import randint
 
-REDIS_URL = 'redis://localhost:6379' #os.environ['REDISCLOUD_URL']
+REDIS_URL = 'redis://localhost:6379'
 REDIS_CHAN = 'editor'
 
 app = Flask(__name__)
-app.debug = True #'DEBUG' in os.environ
+app.debug = True
 app.logger.setLevel(logging.DEBUG)
 
 sockets = Sockets(app)

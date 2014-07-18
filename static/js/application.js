@@ -11,9 +11,18 @@ var dmp = new diff_match_patch();
 var id = Math.floor(Math.random()*11);
 var language = 'Python';
 
-function setLanguage(lang) {
+function setLanguage(lang, update_editor) {
   language = lang;
   $('#selected-language').html(language);
+
+  // drop in bolierplate if need be
+  if (editor.getValue() == "" && update_editor) {
+    if (language == 'Java') {
+      editor.setValue("class Main {\n    public static void main(String[] args) {\n\n    }\n}");
+    } else if (language == 'PHP') {
+      editor.setValue("<?php\n\n?>");
+    }
+  }
 }
 
 inbox.onmessage = function(message) {
@@ -38,7 +47,7 @@ inbox.onmessage = function(message) {
   } else if (data.results !== undefined) {
     $("#results").html(data.results.replace(/\n/g, '<br>'));
   } else if (data.type == "lang") {
-    setLanguage(data.language);
+    setLanguage(data.language, !from_self);
   }
 };
 

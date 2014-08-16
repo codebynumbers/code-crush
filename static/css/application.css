@@ -2,3 +2,14 @@
   overflow: auto;
   height: 500px;
 }
+
+#results {
+	background-color: #3a3f44;
+	padding: 10px;
+	font-family: Courier New, monospace;
+	font-weight: bold;
+}
+
+#heart {
+	height:25px;
+}

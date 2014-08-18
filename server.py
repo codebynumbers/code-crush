@@ -32,33 +32,6 @@ docker = Docker.Client(base_url='unix://var/run/docker.sock',
             version='1.9',
             timeout=5)
 
-images = {
-    'Python': {
-        'name': 'dockerfile/python',
-        'run': '/usr/bin/python /mnt/code/run',
-    },
-    'PHP': {
-        'name': 'darh/php-essentials',
-        'run': '/usr/bin/php /mnt/code/run',
-    },
-    'Perl': {
-        'name': 'dockerfile/python',
-        'run': '/usr/bin/perl /mnt/code/run',
-    },
-    'Java': {
-        'name': 'dockerfile/java',
-        'run': '/bin/bash -c "cd /mnt/code && /usr/bin/javac run.java && /usr/bin/java Main"',
-        'ext': '.java'
-    },
-    'Ruby': {
-        'name': 'dockerfile/ruby',
-        'run': '/usr/bin/ruby /mnt/code/run',
-    },
-    'JavaScript': {
-        'name': 'dockerfile/nodejs',
-        'run': '/usr/local/bin/node /mnt/code/run',
-    }
-}
 
 class Backend(object):
     """Interface for registering and updating WebSocket clients."""
@@ -150,7 +123,7 @@ def outbox(ws, room):
 
 def run_code(message_dict):
     lang = message_dict['language']
-    if lang not in images:
+    if lang not in app.config['IMAGES']:
         app.logger.debug(u'Unsupported language')
         return
 
@@ -158,7 +131,7 @@ def run_code(message_dict):
     # TODO switch this to tempfile.mkdtemp
     rand = randint(1, 999999999)
     runpath = "%s/unsafe/%d" % (cwd, rand)
-    runfile = "%s/run%s" % (runpath, images[lang].get('ext', '') )
+    runfile = "%s/run%s" % (runpath, pp.config['IMAGES'][lang].get('ext', '') )
     os.mkdir(runpath)
 
     with open(runfile, 'w') as outfile:
@@ -166,7 +139,7 @@ def run_code(message_dict):
 
     container_id = docker.create_container(
         images[lang]['name'],
-        command=images[lang]['run'],
+        command=pp.config['IMAGES'][lang]['run'],
         volumes=['/mnt/code'])
 
     res = docker.start(container_id,

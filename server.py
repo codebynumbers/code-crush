@@ -8,7 +8,6 @@ Allows "safe" remote code execution via docker.
 """
 
 import os
-import logging
 import redis
 import gevent
 import docker as Docker
@@ -18,15 +17,13 @@ from flask import Flask, render_template
 from flask_sockets import Sockets
 from random import randint
 
-REDIS_URL = 'redis://localhost:6379'
-REDIS_CHAN = 'editor'
 
 app = Flask(__name__)
-app.debug = True
-app.logger.setLevel(logging.DEBUG)
+app.config.from_pyfile('application.cfg', silent=True)
+app.logger.setLevel(app.config['LOGLEVEL'])
 
 sockets = Sockets(app)
-redis = redis.from_url(REDIS_URL)
+redis = redis.from_url(app.config['REDIS_URL'])
 
 cwd = os.path.dirname(os.path.realpath(__file__))
 
@@ -73,7 +70,7 @@ class Backend(object):
         self.client_room = {}
 
         self.pubsub = redis.pubsub()
-        self.pubsub.subscribe(REDIS_CHAN)
+        self.pubsub.subscribe(app.config['REDIS_CHAN'])
 
 
     def __iter_data(self):
@@ -138,7 +135,7 @@ def inbox(ws, room):
 
         message = json.dumps(message_dict)
         #app.logger.info(u'Inserting message: {}'.format(message))
-        redis.publish(REDIS_CHAN, message)
+        redis.publish(app.config['REDIS_CHAN'], message)
 
 
 @sockets.route('/receive/<room>')

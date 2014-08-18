@@ -15,7 +15,7 @@ function setLanguage(lang, update_editor) {
   language = lang;
   $('#selected-language').html(language);
 
-  // drop in bolierplate if need be
+  // drop in boilerplate if need be
   if (editor.getValue() == "" && update_editor) {
     if (language == 'Java') {
       editor.setValue("class Main {\n    public static void main(String[] args) {\n\n    }\n}");

@@ -14,7 +14,10 @@ def download_images():
             timeout=5)
 
     for lang in app.config['IMAGES'].items():
-        print docker.pull(lang[1]['name'])
+        image_name = lang[1]['name']
+        if not docker.images(name=image_name):
+            print "Pulling image_name"
+            print docker.pull(image_name)
 
 
 if __name__ == "__main__":

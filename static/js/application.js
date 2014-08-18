@@ -90,7 +90,7 @@ setInterval(
 $(function(){
 
   $('#language-select a').click(function() {
-    setLanguage($(this).html());
+    setLanguage($(this).html(), true);
     outbox.send(JSON.stringify({ id: id, type: 'lang', language: language}));
   });
 

@@ -191,4 +191,4 @@ def run_code(message_dict):
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host='0.0.0.0')

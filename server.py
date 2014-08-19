@@ -138,8 +138,8 @@ def run_code(message_dict):
         outfile.write(message_dict['full_text'])
 
     container_id = docker.create_container(
-        images[lang]['name'],
-        command=pp.config['IMAGES'][lang]['run'],
+        app.config['IMAGES'][lang]['name'],
+        command=app.config['IMAGES'][lang]['run'],
         volumes=['/mnt/code'])
 
     res = docker.start(container_id,

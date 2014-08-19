@@ -131,7 +131,7 @@ def run_code(message_dict):
     # TODO switch this to tempfile.mkdtemp
     rand = randint(1, 999999999)
     runpath = "%s/unsafe/%d" % (cwd, rand)
-    runfile = "%s/run%s" % (runpath, pp.config['IMAGES'][lang].get('ext', '') )
+    runfile = "%s/run%s" % (runpath, app.config['IMAGES'][lang].get('ext', '') )
     os.mkdir(runpath)
 
     with open(runfile, 'w') as outfile:

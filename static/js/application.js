@@ -3,8 +3,8 @@ var editor = ace.edit("input-text");
 editor.setTheme("ace/theme/monokai");
 editor.getSession().setMode("ace/mode/python");
 
-var outbox = new ReconnectingWebSocket("ws://"+ location.host + "/submit/"+room);
-var inbox = new ReconnectingWebSocket("ws://"+ location.host + "/receive/"+room);
+var outbox = new ReconnectingWebSocket("ws://"+ location.host + "/ws/submit/"+room);
+var inbox = new ReconnectingWebSocket("ws://"+ location.host + "/ws/receive/"+room);
 
 var textShadow = "";
 var dmp = new diff_match_patch();

@@ -1,17 +1,16 @@
 import gevent
 
-
 class Backend(object):
     """Interface for registering and updating WebSocket clients."""
 
-    def __init__(self):
+    def __init__(self, redis, channel):
         # map of room => clients[]
         self.room_clients = {}
         # map of clients => room
         self.client_room = {}
 
         self.pubsub = redis.pubsub()
-        self.pubsub.subscribe(app.config['REDIS_CHAN'])
+        self.pubsub.subscribe(channel)
 
 
     def __iter_data(self):

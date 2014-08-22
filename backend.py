@@ -1,4 +1,6 @@
 import gevent
+import simplejson as json
+
 
 class Backend(object):
     """Interface for registering and updating WebSocket clients."""

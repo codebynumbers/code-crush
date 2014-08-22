@@ -25,7 +25,6 @@ app.logger.setLevel(app.config['LOGLEVEL'])
 
 sockets = Sockets(app)
 redis = redis.from_url(app.config['REDIS_URL'])
-
 cwd = os.path.dirname(os.path.realpath(__file__))
 
 # Re build client and image each time so we don't get all the old logs

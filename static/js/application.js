@@ -43,11 +43,11 @@ inbox.onmessage = function(message) {
     //console.log('updating full text');
     editor.setValue(data.full_text);
     textShadow = data.full_text;
-    setLanguage(data.language);
+    setLanguage(data.language, false);
   } else if (data.results !== undefined) {
     $("#results").html(data.results.replace(/\n/g, '<br>'));
   } else if (data.type == "lang") {
-    setLanguage(data.language, !from_self);
+    setLanguage(data.language, false);
   }
 };
 
@@ -63,8 +63,8 @@ inbox.onopen = function(){
 };
 
 outbox.onclose = function(){
-    //console.log('outbox closed');
-    this.outbox = new WebSocket(outbox.url);
+  //console.log('outbox closed');
+  this.outbox = new WebSocket(outbox.url);
 };
 
 setInterval(

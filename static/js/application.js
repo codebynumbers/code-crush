@@ -63,8 +63,8 @@ inbox.onopen = function(){
 };
 
 outbox.onclose = function(){
-  //console.log('outbox closed');
-  this.outbox = new WebSocket(outbox.url);
+    //console.log('outbox closed');
+    this.outbox = new WebSocket(outbox.url);
 };
 
 setInterval(
